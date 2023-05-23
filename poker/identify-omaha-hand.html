@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<!-- Use the poker.css style sheet -->
+<!-- This html page will allow a user to practice identifying their Omaha poker hand-->
+<!-- The user will be presented with a board and hole cards and will be asked to identify their best hand-->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omaha Hand Identifying</title>
+    <link rel="stylesheet" href="poker.css" />
+    <script src="js/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="js/gpt-poker-min.js"></script>
+
+    <script>
+        /*import { createDeck, shuffleDeck, scoreHand, getHandDescription, bestOmahaHand, categories, getSuitCharColor } from './gpt-poker.js';*/
+        function createConfetti() {
+            // You can adjust the confetti settings by passing an options object to the confetti() function
+            const confettiSettings = {
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            };
+            confetti(confettiSettings);
+        }
+
+        function createPerformanceChart(handCategoryTable) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+
+            const labels = Object.keys(handCategoryTable);
+            const correctData = labels.map((label) => handCategoryTable[label].correct);
+            const incorrectData = labels.map((label) => handCategoryTable[label].incorrect);
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Correct',
+                            data: correctData,
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Incorrect',
+                            data: incorrectData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                        },
+                    ],
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                    },
+                },
+            });
+
+            return chart;
+        }
+
+
+
+        // declare deck, board, hole, and bestHand variables
+        let OmahaBoard, OmahaHole, OmahaBestHand;
+
+        // initialize a table to keep track of the number of correct and incorrect guesses,
+        // by hand category
+        const handCategoryTable = {
+            'high card': { correct: 0, incorrect: 0 },
+            'pair': { correct: 0, incorrect: 0 },
+            'two pair': { correct: 0, incorrect: 0 },
+            'three of a kind': { correct: 0, incorrect: 0 },
+            'straight': { correct: 0, incorrect: 0 },
+            'flush': { correct: 0, incorrect: 0 },
+            'full house': { correct: 0, incorrect: 0 },
+            'four of a kind': { correct: 0, incorrect: 0 },
+            'straight flush': { correct: 0, incorrect: 0 }
+        };
+
+
+        // declare a variable to keep track of the performance chart
+        let performanceChart;
+
+        // Create a function updateTable(bCorrect, omahaHand) that will update the table with the number of correct and incorrect guesses
+        function updateTable(bCorrect, omahaHand) {
+            const score = scoreHand(omahaHand);
+            const handCategory = categories[score.category];
+            if (bCorrect) {
+                handCategoryTable[handCategory].correct++;
+            } else {
+                handCategoryTable[handCategory].incorrect++;
+            }
+            var totalCorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
+                return total + handCategoryTable[handCategory].correct;
+            }, 0);
+
+            var totalIncorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
+                return total + handCategoryTable[handCategory].incorrect;
+            }, 0);
+
+            if (totalCorrect > 0 || totalIncorrect > 0) {
+                var totalPercentCorrect = (totalCorrect / (totalCorrect + totalIncorrect)) * 100;
+            } else {
+                var totalPercentCorrect = 0;
+            }
+            const table = document.getElementById('hand_category_table');
+            table.innerHTML = `
+    <tr>
+      <th>Hand Category</th>
+      <th>Correct</th>
+      <th>Incorrect</th>
+      <th>Percent Correct</th>
+    </tr>
+    ${Object.keys(handCategoryTable).map((handCategory) => {
+                const correct = handCategoryTable[handCategory].correct;
+                const incorrect = handCategoryTable[handCategory].incorrect;
+                const total = correct + incorrect;
+                const percentCorrect = total > 0 ? ((correct / total) * 100).toFixed(0) : '-';
+                return `
+        <tr>
+          <td>${handCategory}</td>
+          <td>${correct}</td>
+          <td>${incorrect}</td>
+          <td>${percentCorrect}%</td>
+        </tr>
+      `;
+            }).join('')}
+    <tr>
+      <td>Total</td>
+      <td>${Object.keys(handCategoryTable).reduce((total, handCategory) => {
+                return total + handCategoryTable[handCategory].correct;
+            }, 0)}</td>
+      <td>${Object.keys(handCategoryTable).reduce((total, handCategory) => {
+                return total + handCategoryTable[handCategory].incorrect;
+            }, 0)}</td>
+            <td>${totalPercentCorrect.toFixed(0)}%</td>
+    </tr>
+  `;
+            // Update the performance chart
+            if (!performanceChart) {
+                performanceChart = createPerformanceChart(handCategoryTable);
+            } else {
+                const labels = Object.keys(handCategoryTable);
+                performanceChart.data.labels = labels;
+                performanceChart.data.datasets[0].data = labels.map((label) => handCategoryTable[label].correct);
+                performanceChart.data.datasets[1].data = labels.map((label) => handCategoryTable[label].incorrect);
+                performanceChart.update();
+            }
+        }
+
+
+
+        function displayCards(cards) {
+            return cards.map(card => `${card.rank}${getSuitCharColor(card.suit)}`).join(', ');
+        }
+
+        // render cards to the DOM
+        function renderCards(cards, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            cards.forEach((card) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.classList.add('card');
+                // Set the data-rank and data-suit attributes
+                cardDiv.dataset.rank = card.rank;
+                cardDiv.dataset.suit = card.suit;
+                cardDiv.innerHTML = `
+                    <div class="card-rank">${card.rank}</div>
+                    <div class="card-suit">${getSuitCharColor(card.suit)}</div>
+                `;
+                container.appendChild(cardDiv);
+            });
+        }
+
+        // Takes a poker hand and a container id and renders a text description
+        // of the hand and it's score to the DOM
+        function renderHandScore(hand, containerId) {
+            const container = document.getElementById(containerId);
+            const handDescription = getHandDescription(hand);
+            container.innerHTML = `
+                <div>Hand category: ${handDescription}</div>
+            `;
+        }
+
+        function drawOmahaHand() {
+            const deck = shuffleDeck(createDeck());
+            OmahaBoard = deck.slice(0, 5);
+            OmahaHole = deck.slice(5, 9);
+
+            // for testing set the board and hole cards to a known hand
+            /*
+            OmahaBoard = parseHand('4h7cQcQd4d');
+            OmahaHole = parseHand('5c4s4c5s');
+            */
+            renderCards(OmahaBoard, 'omaha_board');
+            renderCards(OmahaHole, 'omaha_hole');
+
+            // We need to clear the best hand left over from prior iteration
+            const container = document.getElementById('omaha_score');
+            container.innerHTML = `Hand category: `;
+        }
+
+
+        // Render cards with class adjusted to show correct or incorrect selection
+        function renderAlternateCards(OmahaBestHand) {
+            const hole = document.getElementById('omaha_hole');
+            const board = document.getElementById('omaha_board');
+            const holeCards = hole.getElementsByClassName('card');
+            const boardCards = board.getElementsByClassName('card');
+
+            // Helper function to check if a card is in the OmahaBestHand array
+            const isCardInBestHand = (card) => {
+                return OmahaBestHand.some(
+                    (bestHandCard) => bestHandCard.rank === card.rank && bestHandCard.suit === card.suit
+                );
+            };
+
+            // Update the hole cards
+            for (const card of holeCards) {
+                const cardData = { rank: card.dataset.rank, suit: card.dataset.suit };
+                if (card.classList.contains('selected')) {
+                    card.classList.remove('selected');
+                    if (!isCardInBestHand(cardData)) {
+                        card.classList.add('selected-wrong');
+                    } else {
+                        card.classList.add('selected-right');
+                    }
+                } else if (isCardInBestHand(cardData)) {
+                    card.classList.add('should-have-selected');
+                } else {
+                    card.classList.add('unselected-right')
+                }
+            }
+
+            // Update the board cards
+            for (const card of boardCards) {
+                const cardData = { rank: card.dataset.rank, suit: card.dataset.suit };
+                if (card.classList.contains('selected')) {
+                    card.classList.remove('selected');
+                    if (!isCardInBestHand(cardData)) {
+                        card.classList.add('selected-wrong');
+                    } else {
+                        card.classList.add('selected-right');
+                    }
+                } else if (isCardInBestHand(cardData)) {
+                    card.classList.add('should-have-selected');
+                } else {
+                    card.classList.add('unselected-right')
+                }
+            }
+        }
+
+        // determine if the user has selected the correct cards
+        function allSelectedCardsAreCorrect(OmahaBestHand) {
+            const hole = document.getElementById('omaha_hole');
+            const board = document.getElementById('omaha_board');
+            const holeSelectedCards = hole.getElementsByClassName('card selected');
+            const boardSelectedCards = board.getElementsByClassName('card selected');
+
+            if (holeSelectedCards.length !== 2 || boardSelectedCards.length !== 3) {
+                return false;
+            }
+
+            const selectedCards = [...holeSelectedCards, ...boardSelectedCards];
+
+            return selectedCards.every((selectedCard) => {
+                const cardData = { rank: selectedCard.dataset.rank, suit: selectedCard.dataset.suit };
+                return OmahaBestHand.some(
+                    (bestHandCard) => bestHandCard.rank === cardData.rank && bestHandCard.suit === cardData.suit
+                );
+            });
+        }
+
+
+        // Add event listeners to the buttons
+
+        // We'll use the event delegation pattern to add a single event listener to the board
+        // and then check to see if the click was on a card
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the containers for both the hole and the board
+            const hole = document.getElementById('omaha_hole');
+            const board = document.getElementById('omaha_board');
+            const omahaConfirmBtn = document.getElementById('omahaConfirmBtn');
+            const omahaDrawBtn = document.getElementById('omahaDrawBtn');
+
+            // Card selection flag
+            let cardSelectionEnabled = true;
+
+            // Function to update the button state
+            const updateButtonState = () => {
+                const selectedHoleCards = hole.getElementsByClassName('selected').length;
+                const selectedBoardCards = board.getElementsByClassName('selected').length;
+
+                omahaConfirmBtn.disabled = selectedHoleCards !== 2 || selectedBoardCards !== 3;
+            };
+
+            // Create a function to handle card clicks
+            const handleCardClick = (event) => {
+                if (!cardSelectionEnabled) {
+                    return;
+                }
+
+                // Check to see if the click was on a card
+                if (event.target.classList.contains('card')) {
+                    // Get the container of the clicked card
+                    const container = event.target.parentElement;
+
+                    // Count the number of selected cards in the container
+                    const selectedCards = container.getElementsByClassName('selected').length;
+
+                    // Check if the card is already selected
+                    const isSelected = event.target.classList.contains('selected');
+
+                    // Define the maximum number of allowed selected cards for each container
+                    const maxSelectedCards = container === hole ? 2 : 3;
+
+                    // Toggle the selected class on the card if the constraints are met
+                    if (isSelected || selectedCards < maxSelectedCards) {
+                        event.target.classList.toggle('selected');
+                    }
+
+                    // Update the button state after each click
+                    updateButtonState();
+                }
+            };
+
+            // Add the click event listeners to both the hole and the board
+            hole.addEventListener('click', handleCardClick);
+            board.addEventListener('click', handleCardClick);
+
+            // Add a click event listener to the confirm button
+            // Disable card selection when the confirm button is clicked
+            omahaConfirmBtn.addEventListener('click', () => {
+                cardSelectionEnabled = false;
+                omahaConfirmBtn.disabled = true; // disable when the button is clicked
+                omahaDrawBtn.disabled = false; // enable the draw button
+
+                // now that the user has confirmed their selection, 
+                // we can render the hand and score
+                const selectedHoleCards = hole.getElementsByClassName('selected');
+                const selectedBoardCards = board.getElementsByClassName('selected');
+
+                // find the best hand from the board and hole cards
+                OmahaBestHand = bestOmahaHand(OmahaBoard, OmahaHole);
+                const selectedHand = [...selectedHoleCards, ...selectedBoardCards].map((card) => {
+                    return {
+                        rank: card.dataset.rank,
+                        suit: card.dataset.suit,
+                    };
+                });
+                const scoreSelectedHand = scoreHand(selectedHand);
+                const scoreOmahaBestHand = scoreHand(OmahaBestHand);
+
+                // make some confetti if the user chose correctly
+                let picked_correct;
+                if (scoreSelectedHand.score === scoreOmahaBestHand.score) {
+                    createConfetti();
+                    // set a variable to indicate that the user has won
+                    // this will be used to keep track of correct and incorrect answers
+                    picked_correct = true;
+                    // set the best hand to the selected hand since 
+                    // the user has selected the correct hand
+                    // Note there may be more than one correct answer so 
+                    // we'll use the one the user chose since it has the same
+                    // score as the best hand our algorithm found
+                    OmahaBestHand = selectedHand;
+                } else {
+                    picked_correct = false;
+                }
+
+                // Update table with correct/incorrect answer, as well as the category of hand
+                updateTable(picked_correct, OmahaBestHand);
+
+                // render the selected cards to indicate correct or incorrect selection
+                renderAlternateCards(OmahaBestHand);
+                //renderCards(OmahaBestHand, 'omaha_hand');
+                renderHandScore(OmahaBestHand, 'omaha_score');
+
+            });
+
+            // Enable card selection when the draw button is clicked
+            omahaDrawBtn.addEventListener('click', () => {
+                cardSelectionEnabled = true;
+                omahaDrawBtn.disabled = true; // disable when the button is clicked
+                drawOmahaHand();
+                updateButtonState();
+            });
+            const coll = document.querySelector('.collapsible');
+
+            coll.addEventListener('click', function () {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                }
+            });
+            // draw first hand when the page loads
+            drawOmahaHand();
+            updateButtonState();
+            omahaDrawBtn.disabled = true;
+        });
+
+    </script>
+</head>
+
+<body>
+    <h1>Omaha Hand - Select 3 board cards and 2 hole cards</h1>
+    <button class="collapsible">Show/Hide Hints</button>
+    <div class="content">
+        <p>Here are some hints for identifying Omaha poker hands.</p>
+        <p>In Omaha, you have to use exactly 3 cards from the shared community cards (called the "board")</p>
+        <p>and exactly 2 cards from your hand (called the "hole") to make your best 5-card poker hand.</p>
+        <ol>
+            <li>Check for flush possibilities:
+                <ul>
+                    <li>Look for at least three community cards of the same suit.</li>
+                    <li>If you find a flush possibility, check if you have two hole cards of the same suit to complete
+                        the flush.</li>
+                </ul>
+            </li>
+            <li>Check for paired, trips, full houses, and quads:
+                <ul>
+                    <li>Mentally arrange the community cards from highest to lowest.</li>
+                    <li>Compare your hole cards to the community cards to see if any of them match.</li>
+                    <li>If you find matching cards, think about possible combinations: pairs, trips, full houses, and
+                        quads.</li>
+                </ul>
+            </li>
+            <li>Check for straights:
+                <ul>
+                    <li>Look for sequences of three consecutive community cards.</li>
+                    <li>If you find a sequence, check if you have two hole cards to complete a straight (e.g., if the
+                        community cards have 4-5-6, you need 2-3, 3-7, or 7-8 in your hole cards).</li>
+                </ul>
+            </li>
+            <li>Check for non-consecutive straights:
+                <ul>
+                    <li>Look for three community cards within a span of 5 (e.g., 3-5-7 or 2-4-6).</li>
+                    <li>If you find such a combination, check if you have two hole cards that can fill the gaps to
+                        complete a straight (e.g., for community cards 3-5-7, you need 4-6, 6-8, or 4-8 in your hole
+                        cards).</li>
+                </ul>
+            </li>
+            <li>Check for straight flush possibilities:
+                <ul>
+                    <li>Combine the steps for flushes and straights, looking for suited consecutive cards in the
+                        community cards.</li>
+                    <li>If you find a straight flush possibility, check if you have two hole cards of the same suit that
+                        can complete a straight flush.</li>
+                </ul>
+            </li>
+            <li>Evaluate high cards and kicker strength:
+                <ul>
+                    <li>If you don't have any strong combinations, evaluate your hole cards' strength based on their
+                        face value.</li>
+                    <li>Look for the highest possible pair or high card you can form using your hole cards and the
+                        community cards.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <!-- Add more hints as needed -->
+    </div>
+
+    <div class="card-selection">
+        <span class="label">Board:</span>
+        <div id="omaha_board"></div>
+    </div>
+    <div class="card-selection">
+        <span class="label">Hole:</span>
+        <div id="omaha_hole"></div>
+    </div>
+    <div id="omaha_score"></div>
+    <p></p>
+    <button id="omahaDrawBtn">New Cards</button>
+    <button id="omahaConfirmBtn">Confirm</button>
+    <!-- Create a table to be updated by updateTable -->
+    <h2>Results</h2>
+    <div class="chart-container">
+        <canvas id="performanceChart"></canvas>
+    </div>
+    <table id="hand_category_table"></table>
+</body>
+
+</html>
