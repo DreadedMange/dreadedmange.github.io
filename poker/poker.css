@@ -1,0 +1,147 @@
+/* this CSS file is used by my poker webpages -->
+<!-- it is included in the head section of each page -->
+<!-- It defines card images and the layout of the page -->
+<!-- Include it by adding the following line to the head section of each page -->
+<!-- <link rel="stylesheet" type="text/css" href="poker.css" /> -->
+<!-- The following line is used to make the page responsive  -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+*/
+
+
+.card {
+  display: inline-block;
+  width: 80px;
+  height: 120px;
+  border: 3px solid black;
+  padding: 10px;
+  margin: 5px;
+  margin-top: 20px;
+  font-size: 20px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Media query for mobile devices */
+@media screen and (max-width: 480px) {
+  .card {
+    width: 30px;
+    height: 75px;
+    font-size: 12px;
+    padding: 6px;
+    margin: 3px;
+    margin-top: 10px;
+  }
+}
+
+.selected {
+  background-color: cyan;
+}
+
+/*<!-- need a class for when the user selected a card and it was right -->
+<!-- need a class for when the user selected a card and it was wrong -->
+*/
+
+.selected-wrong {
+  border: 3px solid red;
+}
+
+.selected-right {
+  background-color: powderblue;
+  border: 3px solid green;
+  transform: translateY(-10px);
+  /* Adjust this value to control the distance */
+  transition: transform 0.3s ease;
+  /* Optional: Add a smooth transition effect */
+}
+
+/*  need a class for when the user didn't select a card but should have */
+.should-have-selected {
+  background-color: powderblue;
+  border: 3px solid red;
+  transform: translateY(-10px);
+  /* Adjust this value to control the distance */
+  transition: transform 0.3s ease;
+  /* Optional: Add a smooth transition effect */
+}
+
+.selected-wrong,
+.unselected-right {
+  opacity: 0.5;
+  /* grey out the cards that weren't selected */
+  transition: opacity 0.3s ease;
+  /* Optional: Add a smooth transition effect */
+}
+
+.card-rank {
+  font-size: 36px;
+  font-weight: bold;
+  display: inline-block;
+  pointer-events: none;
+}
+
+.card-suit {
+  font-size: 36px;
+  display: inline-block;
+  margin-left: 5px;
+  pointer-events: none;
+}
+
+.red {
+  color: red;
+}
+
+.black {
+  color: black;
+}
+
+.chart-container {
+  max-width: 80%;
+  /* Adjust this value to control the maximum width */
+  max-height: 20%;
+  /* Adjust this value to control the maximum height */
+}
+
+.collapsible {
+  background-color: #f1f1f1;
+  color: #444;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 18px;
+}
+
+.content {
+  padding: 0 18px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background-color: #f1f1f1;
+}
+
+.card-section {
+  position: relative;
+}
+
+.label {
+  position: relative;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #fff;
+  padding: 2px 4px;
+  border: 1px solid #000;
+  top: 10px; /* Adjust this value to change the vertical position of the label */
+  left: 4px; /* Adjust this value to change the horizontal position of the label */
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid black;
+  padding: 5px;
+}
