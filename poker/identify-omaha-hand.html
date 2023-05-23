@@ -186,11 +186,11 @@
 
         // Takes a poker hand and a container id and renders a text description
         // of the hand and it's score to the DOM
-        function renderHandScore(hand, containerId) {
+        function renderHandScore(hand, openingText, containerId) {
             const container = document.getElementById(containerId);
             const handDescription = getHandDescription(hand);
             container.innerHTML = `
-                <div>Hand category: ${handDescription}</div>
+                <div>${openingText} ${handDescription}</div>
             `;
         }
 
@@ -208,8 +208,10 @@
             renderCards(OmahaHole, 'omaha_hole');
 
             // We need to clear the best hand left over from prior iteration
-            const container = document.getElementById('omaha_score');
-            container.innerHTML = `Hand category: `;
+            const omaha_score_true = document.getElementById('omaha_score_true');
+            omaha_score_true.innerHTML = `Pick your cards`;
+            const omaha_score_user = document.getElementById('omaha_score_user');
+            omaha_score_user.innerHTML = `and click Confirm`;
         }
 
 
@@ -365,6 +367,7 @@
 
                 // make some confetti if the user chose correctly
                 let picked_correct;
+                let pickText;
                 if (scoreSelectedHand.score === scoreOmahaBestHand.score) {
                     createConfetti();
                     // set a variable to indicate that the user has won
@@ -376,8 +379,10 @@
                     // we'll use the one the user chose since it has the same
                     // score as the best hand our algorithm found
                     OmahaBestHand = selectedHand;
+                    pickText = 'Your Pick (correct!):';
                 } else {
                     picked_correct = false;
+                    pickText = 'Your Pick (incorrect):';
                 }
 
                 // Update table with correct/incorrect answer, as well as the category of hand
@@ -385,9 +390,18 @@
 
                 // render the selected cards to indicate correct or incorrect selection
                 renderAlternateCards(OmahaBestHand);
-                //renderCards(OmahaBestHand, 'omaha_hand');
-                renderHandScore(OmahaBestHand, 'omaha_score');
-
+                
+                renderHandScore(selectedHand, pickText, 'omaha_score_user');
+                if( !picked_correct) {
+                    renderHandScore(OmahaBestHand, 'Best Hand:', 'omaha_score_true');
+                } else {
+                    const container = document.getElementById('omaha_score_true');
+                    // We need to insert a line of html so the rest of the page doesn't shift
+                
+            container.innerHTML = `
+                <p></p>
+            `;
+                }
             });
 
             // Enable card selection when the draw button is clicked
@@ -485,7 +499,8 @@
         <span class="label">Hole:</span>
         <div id="omaha_hole"></div>
     </div>
-    <div id="omaha_score"></div>
+    <div id="omaha_score_true"></div>
+    <div id="omaha_score_user"></div>
     <p></p>
     <button id="omahaDrawBtn">New Cards</button>
     <button id="omahaConfirmBtn">Confirm</button>
