@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omaha Hand Identifying</title>
+    <title>Omaha Hand - now with (local) memory!</title>
     <link rel="stylesheet" href="poker.css" />
     <script src="js/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -77,7 +77,8 @@
 
         // initialize a table to keep track of the number of correct and incorrect guesses,
         // by hand category
-        const handCategoryTable = {
+        // It'll be stored in local storage so we can keep track of the user's performance
+        let handCategoryTable = {
             'high card': { correct: 0, incorrect: 0 },
             'pair': { correct: 0, incorrect: 0 },
             'two pair': { correct: 0, incorrect: 0 },
@@ -97,11 +98,29 @@
         function updateTable(bCorrect, omahaHand) {
             const score = scoreHand(omahaHand);
             const handCategory = categories[score.category];
+
+            // get the stored table from local storage
+            const storedTable = localStorage.getItem('handCategoryTable');
+            if (storedTable) {
+                // if there is a stored table, use it
+                handCategoryTable = JSON.parse(storedTable);
+            }
+
+            // update the table
             if (bCorrect) {
                 handCategoryTable[handCategory].correct++;
             } else {
                 handCategoryTable[handCategory].incorrect++;
             }
+
+
+
+            // handCategoryTable has been updated. Now save it to local storage.
+            localStorage.setItem('handCategoryTable', JSON.stringify(handCategoryTable));
+            updateGraphAndTable(handCategoryTable);
+        }
+        function updateGraphAndTable(handCategoryTable) {
+            // Calculate the total number of correct and incorrect guesses
             var totalCorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
                 return total + handCategoryTable[handCategory].correct;
             }, 0);
@@ -115,6 +134,8 @@
             } else {
                 var totalPercentCorrect = 0;
             }
+            
+            // Update the table in the DOM
             const table = document.getElementById('hand_category_table');
             table.innerHTML = `
     <tr>
@@ -158,7 +179,7 @@
                 performanceChart.data.datasets[1].data = labels.map((label) => handCategoryTable[label].incorrect);
                 performanceChart.update();
             }
-        }
+        } // end updateGraphAndTable
 
 
 
@@ -390,15 +411,15 @@
 
                 // render the selected cards to indicate correct or incorrect selection
                 renderAlternateCards(OmahaBestHand);
-                
+
                 renderHandScore(selectedHand, pickText, 'omaha_score_user');
-                if( !picked_correct) {
+                if (!picked_correct) {
                     renderHandScore(OmahaBestHand, 'Best Hand:', 'omaha_score_true');
                 } else {
                     const container = document.getElementById('omaha_score_true');
                     // We need to insert a line of html so the rest of the page doesn't shift
-                
-            container.innerHTML = `
+
+                    container.innerHTML = `
                 <p></p>
             `;
                 }
@@ -427,6 +448,14 @@
             drawOmahaHand();
             updateButtonState();
             omahaDrawBtn.disabled = true;
+
+            // update the results graph if there are results stored in local storage
+            const storedTable = localStorage.getItem('handCategoryTable');
+            if (storedTable) {
+                handCategoryTable = JSON.parse(storedTable);
+                updateGraphAndTable(handCategoryTable);
+            }
+            
         });
 
     </script>
