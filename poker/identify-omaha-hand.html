@@ -269,9 +269,9 @@
 
             // We need to clear the best hand left over from prior iteration
             const omaha_score_true = document.getElementById('omaha_score_true');
-            omaha_score_true.innerHTML = `and then click "Confirm" to see how you did`;
+            omaha_score_true.innerHTML = `2. Click Confirm`;
             const omaha_score_user = document.getElementById('omaha_score_user');
-            omaha_score_user.innerHTML = `Pick your cards`;
+            omaha_score_user.innerHTML = `1. Pick your cards`;
         }
 
 
@@ -451,10 +451,10 @@
                     // we'll use the one the user chose since it has the same
                     // score as the best hand our algorithm found
                     OmahaBestHand = selectedHand;
-                    pickText = `Lucky guess! You got the right answer in ${timeString}:`;
+                    pickText = `Correct!:`;
                 } else {
                     picked_correct = false;
-                    pickText = `Oops, that's wrong. You took ${timeString} and got this hand:`;
+                    pickText = `Wrong!:`;
                 }
 
                 // Update table with correct/incorrect answer, as well as the category of hand
@@ -538,60 +538,70 @@
     <h1>Omaha Hand - Select 3 board cards and 2 hole cards</h1>
     <button class="collapsible">Show/Hide Hints</button>
     <div class="content">
-        <p>Here are some hints for identifying Omaha poker hands.</p>
-        <p>In Omaha, you have to use exactly 3 cards from the shared community cards (called the "board")</p>
-        <p>and exactly 2 cards from your hand (called the "hole") to make your best 5-card poker hand.</p>
+        <p>Here are some hints for identifying Omaha poker hands, sorted from highest to lowest rank:</p>
+        <p>In Omaha, you must use exactly three cards from the shared community cards (the "board")
+and exactly two cards from your own hand (the "hole") to form your best five-card poker hand. The following strategy
+may be helpful - with this approach you can stop looking as soon as you find a match.</p>
         <ol>
+            <li>Check for straight flush possibilities:
+                <ul>
+                    <li>Arrange the community cards mentally from highest to lowest.</li>
+                    <li>Search for three community cards that are in a 5-card span (example J-8-7) and of the same suit.</li>
+                    <li>If found, see if you have two hole cards of the same suit that can complete the straight flush.</li>
+                </ul>
+            </li>
+            <li>Check for four of a kind:
+                <ul>
+                    <li>Note that four of a kind is only possible if there is a pair or three of a kind on the board.</li>
+                    <li>See if you can turn the pair or three of a kind on the board into four of a kind with your hole cards.</li>
+                </ul>
+            </li>
+            <li>Check for a full house:
+                <ul>
+                    <li>Identify if there's a pair or three of a kind in the community cards.</li>
+                    <li>Verify if you can form a full house using your two hole cards.</li>
+                </ul>
+            </li>
             <li>Check for flush possibilities:
                 <ul>
                     <li>Look for at least three community cards of the same suit.</li>
-                    <li>If you find a flush possibility, check if you have two hole cards of the same suit to complete
-                        the flush.</li>
-                </ul>
-            </li>
-            <li>Check for paired, trips, full houses, and quads:
-                <ul>
-                    <li>Mentally arrange the community cards from highest to lowest.</li>
-                    <li>Compare your hole cards to the community cards to see if any of them match.</li>
-                    <li>If you find matching cards, think about possible combinations: pairs, trips, full houses, and
-                        quads.</li>
+                    <li>If there are at least three of one suit, check if you have two hole cards of the same suit to complete the flush.</li>
                 </ul>
             </li>
             <li>Check for straights:
                 <ul>
-                    <li>Look for sequences of three consecutive community cards.</li>
-                    <li>If you find a sequence, check if you have two hole cards to complete a straight (e.g., if the
-                        community cards have 4-5-6, you need 2-3, 3-7, or 7-8 in your hole cards).</li>
+                    <li>Look for at least three community cards that are within a five-card span (e.g., 7-6-4 or J-T-8).</li>
+                    <li>If found, note the missing cards and check your hole cards for two cards that can fill the gaps to complete a straight.</li>
+                    <li>Be aware that if there are more than three in a 5-card span on the board, you can only use 3 still. In this situation, 
+                        hole cards that pair the board can be very useful!</li>
                 </ul>
             </li>
-            <li>Check for non-consecutive straights:
+            <li>Check for three of a kind:
                 <ul>
-                    <li>Look for three community cards within a span of 5 (e.g., 3-5-7 or 2-4-6).</li>
-                    <li>If you find such a combination, check if you have two hole cards that can fill the gaps to
-                        complete a straight (e.g., for community cards 3-5-7, you need 4-6, 6-8, or 4-8 in your hole
-                        cards).</li>
+                    <li>Identify if there are any two identical cards on the board, or a pair in the hole that matches a board card to make three of a kind.</li>
                 </ul>
             </li>
-            <li>Check for straight flush possibilities:
+            <li>Check for two pair hands:
                 <ul>
-                    <li>Combine the steps for flushes and straights, looking for suited consecutive cards in the
-                        community cards.</li>
-                    <li>If you find a straight flush possibility, check if you have two hole cards of the same suit that
-                        can complete a straight flush.</li>
+                    <li>If there's a pair in the community cards and a pair in your hole cards, you can form two pairs.</li>
+                    <li>If there are two distinct community cards that match one each of your hole cards, you can form two pairs.</li>
+                    <li>If there's a pair on the board and one card in your hole cards that matches another community card, you can form two pairs.</li>
+                </ul>
+            </li>
+            
+            <li>Check for pair:
+                <ul>
+                    <li>Identify if there's a single card on the board that matches with a card in your hole cards, or a pair on the board.</li>
                 </ul>
             </li>
             <li>Evaluate high cards and kicker strength:
                 <ul>
-                    <li>If you don't have any strong combinations, evaluate your hole cards' strength based on their
-                        face value.</li>
-                    <li>Look for the highest possible pair or high card you can form using your hole cards and the
-                        community cards.</li>
+                    <li>If you don't have any strong combinations, pick the highest three cards on the board and the highest two cards in the hole.</li>
                 </ul>
             </li>
         </ol>
-
-        <!-- Add more hints as needed -->
     </div>
+    
 
     <div class="card-selection">
         <span class="label">Board:</span>
