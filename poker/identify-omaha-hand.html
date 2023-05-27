@@ -79,15 +79,15 @@
         // by hand category
         // It'll be stored in local storage so we can keep track of the user's performance
         let handCategoryTable = {
-            'high card': { correct: 0, incorrect: 0 },
-            'pair': { correct: 0, incorrect: 0 },
-            'two pair': { correct: 0, incorrect: 0 },
-            'three of a kind': { correct: 0, incorrect: 0 },
-            'straight': { correct: 0, incorrect: 0 },
-            'flush': { correct: 0, incorrect: 0 },
-            'full house': { correct: 0, incorrect: 0 },
-            'four of a kind': { correct: 0, incorrect: 0 },
-            'straight flush': { correct: 0, incorrect: 0 }
+            'high card': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'pair': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'two pair': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'three of a kind': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'straight': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'flush': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'full house': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'four of a kind': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
+            'straight flush': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 }
         };
 
 
@@ -95,7 +95,7 @@
         let performanceChart;
 
         // Create a function updateTable(bCorrect, omahaHand) that will update the table with the number of correct and incorrect guesses
-        function updateTable(bCorrect, omahaHand) {
+        function updateTable(bCorrect, omahaHand, timeSpent) {
             const score = scoreHand(omahaHand);
             const handCategory = categories[score.category];
 
@@ -109,8 +109,10 @@
             // update the table
             if (bCorrect) {
                 handCategoryTable[handCategory].correct++;
+                handCategoryTable[handCategory].secondsCorrect += timeSpent;
             } else {
                 handCategoryTable[handCategory].incorrect++;
+                handCategoryTable[handCategory].secondsIncorrect += timeSpent;
             }
 
 
@@ -134,7 +136,25 @@
             } else {
                 var totalPercentCorrect = 0;
             }
-            
+            // calculate total time spent on correct and incorrect guesses
+            var totalSecondsCorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
+                return total + handCategoryTable[handCategory].secondsCorrect;
+            }, 0);
+            var totalSecondsIncorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
+                return total + handCategoryTable[handCategory].secondsIncorrect;
+            }, 0);
+            // calculate average time spent on correct and incorrect guesses
+            if (totalCorrect > 0) {
+                var averageSecondsCorrect = totalSecondsCorrect / totalCorrect;
+            } else {
+                var averageSecondsCorrect = 0;
+            }
+            if (totalIncorrect > 0) {
+                var averageSecondsIncorrect = totalSecondsIncorrect / totalIncorrect;
+            } else {
+                var averageSecondsIncorrect = 0;
+            }
+
             // Update the table in the DOM
             const table = document.getElementById('hand_category_table');
             table.innerHTML = `
@@ -143,18 +163,33 @@
       <th>Correct</th>
       <th>Incorrect</th>
       <th>Percent Correct</th>
+      <th>Total Time Correct</th>
+        <th>Average Time Correct (s)</th>
+        <th>Total Time Incorrect</th>
+        <th>Average Time Incorrect (s)</th>
     </tr>
     ${Object.keys(handCategoryTable).map((handCategory) => {
                 const correct = handCategoryTable[handCategory].correct;
                 const incorrect = handCategoryTable[handCategory].incorrect;
                 const total = correct + incorrect;
                 const percentCorrect = total > 0 ? ((correct / total) * 100).toFixed(0) : '-';
+                const minutesCorrect = Math.floor(handCategoryTable[handCategory].secondsCorrect / 60);
+                const secondsCorrect = handCategoryTable[handCategory].secondsCorrect % 60;
+                const minutesIncorrect = Math.floor(handCategoryTable[handCategory].secondsIncorrect / 60);
+                const secondsIncorrect = handCategoryTable[handCategory].secondsIncorrect % 60;
+                const averageSecondsCorrect = handCategoryTable[handCategory].secondsCorrect / correct;
+                const averageSecondsIncorrect = handCategoryTable[handCategory].secondsIncorrect / incorrect;
                 return `
         <tr>
           <td>${handCategory}</td>
           <td>${correct}</td>
           <td>${incorrect}</td>
           <td>${percentCorrect}%</td>
+            <td>${minutesCorrect}:${secondsCorrect < 10 ? '0' : ''}${secondsCorrect}</td>
+            <td>${isNaN(averageSecondsCorrect) ? '-' : averageSecondsCorrect.toFixed(1)}</td>
+            <td>${minutesIncorrect}:${secondsIncorrect < 10 ? '0' : ''}${secondsIncorrect}</td>
+            <td>${isNaN(averageSecondsIncorrect) ? '-' : averageSecondsIncorrect.toFixed(1)}</td>
+
         </tr>
       `;
             }).join('')}
@@ -167,6 +202,10 @@
                 return total + handCategoryTable[handCategory].incorrect;
             }, 0)}</td>
             <td>${totalPercentCorrect.toFixed(0)}%</td>
+            <td>${Math.floor(totalSecondsCorrect / 60)}m:${(totalSecondsCorrect % 60) < 10 ? '0' : ''}${(totalSecondsCorrect % 60)}s</td>
+            <td>${averageSecondsCorrect.toFixed(1)}</td>
+            <td>${Math.floor(totalSecondsIncorrect / 60)}m:${(totalSecondsIncorrect % 60) < 10 ? '0' : ''}${(totalSecondsIncorrect % 60)}s</td>
+            <td>${averageSecondsIncorrect.toFixed(1)}</td>
     </tr>
   `;
             // Update the performance chart
@@ -230,9 +269,9 @@
 
             // We need to clear the best hand left over from prior iteration
             const omaha_score_true = document.getElementById('omaha_score_true');
-            omaha_score_true.innerHTML = `Pick your cards`;
+            omaha_score_true.innerHTML = `and then click "Confirm" to see how you did`;
             const omaha_score_user = document.getElementById('omaha_score_user');
-            omaha_score_user.innerHTML = `and click Confirm`;
+            omaha_score_user.innerHTML = `Pick your cards`;
         }
 
 
@@ -321,6 +360,9 @@
             // Card selection flag
             let cardSelectionEnabled = true;
 
+            // Timer variables
+            totalSeconds = 0;
+
             // Function to update the button state
             const updateButtonState = () => {
                 const selectedHoleCards = hole.getElementsByClassName('selected').length;
@@ -370,6 +412,15 @@
                 omahaConfirmBtn.disabled = true; // disable when the button is clicked
                 omahaDrawBtn.disabled = false; // enable the draw button
 
+                // timer code
+                clearInterval(timerVar);
+                const elapsedTime = totalSeconds;
+
+                // create a string representation of the time
+                const minutes = Math.floor(elapsedTime / 60);
+                const seconds = elapsedTime % 60;
+                const timeString = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
                 // now that the user has confirmed their selection, 
                 // we can render the hand and score
                 const selectedHoleCards = hole.getElementsByClassName('selected');
@@ -400,14 +451,14 @@
                     // we'll use the one the user chose since it has the same
                     // score as the best hand our algorithm found
                     OmahaBestHand = selectedHand;
-                    pickText = 'Your Pick (correct!):';
+                    pickText = `Lucky guess! You got the right answer in ${timeString}:`;
                 } else {
                     picked_correct = false;
-                    pickText = 'Your Pick (incorrect):';
+                    pickText = `Oops, that's wrong. You took ${timeString} and got this hand:`;
                 }
 
                 // Update table with correct/incorrect answer, as well as the category of hand
-                updateTable(picked_correct, OmahaBestHand);
+                updateTable(picked_correct, OmahaBestHand, elapsedTime);
 
                 // render the selected cards to indicate correct or incorrect selection
                 renderAlternateCards(OmahaBestHand);
@@ -419,9 +470,7 @@
                     const container = document.getElementById('omaha_score_true');
                     // We need to insert a line of html so the rest of the page doesn't shift
 
-                    container.innerHTML = `
-                <p></p>
-            `;
+                    container.innerHTML = ``;
                 }
             });
 
@@ -431,6 +480,16 @@
                 omahaDrawBtn.disabled = true; // disable when the button is clicked
                 drawOmahaHand();
                 updateButtonState();
+                // Stop the timer - shouldn't be necessary but just in case
+                clearInterval(timerVar);
+
+                // Reset the timer
+                totalSeconds = 0;
+                document.getElementById("minutes").innerHTML = '00';
+                document.getElementById("seconds").innerHTML = '00';
+
+                // Restart the timer
+                timerVar = setInterval(countTimer, 1000);
             });
             const coll = document.querySelector('.collapsible');
 
@@ -444,6 +503,7 @@
                     content.style.maxHeight = content.scrollHeight + 'px';
                 }
             });
+
             // draw first hand when the page loads
             drawOmahaHand();
             updateButtonState();
@@ -452,10 +512,23 @@
             // update the results graph if there are results stored in local storage
             const storedTable = localStorage.getItem('handCategoryTable');
             if (storedTable) {
-                handCategoryTable = JSON.parse(storedTable);
-                updateGraphAndTable(handCategoryTable);
+                // check that secondsCorrect or secondsIncorrect exists for at least one hand category 
+                // and if not, delete thte table from localStorage
+                const storedTableParsed = JSON.parse(storedTable);
+                const secondsCorrectExists = Object.keys(storedTableParsed).some((handCategory) => {
+                    return storedTableParsed[handCategory].secondsCorrect > 0;
+                });
+                const secondsIncorrectExists = Object.keys(storedTableParsed).some((handCategory) => {
+                    return storedTableParsed[handCategory].secondsIncorrect > 0;
+                });
+                if (!secondsCorrectExists && !secondsIncorrectExists) {
+                    localStorage.removeItem('handCategoryTable');
+                } else {
+                    handCategoryTable = JSON.parse(storedTable);
+                    updateGraphAndTable(handCategoryTable);
+                }
             }
-            
+
         });
 
     </script>
@@ -528,11 +601,16 @@
         <span class="label">Hole:</span>
         <div id="omaha_hole"></div>
     </div>
-    <div id="omaha_score_true"></div>
     <div id="omaha_score_user"></div>
-    <p></p>
-    <button id="omahaDrawBtn">New Cards</button>
-    <button id="omahaConfirmBtn">Confirm</button>
+    <div id="omaha_score_true"></div>
+    <!-- Buttons and Timer HTML -->
+    <div id="button-container">
+        <button id="omahaDrawBtn">New Cards</button>
+        <button id="omahaConfirmBtn">Confirm</button>
+    </div>
+    <div id="timer">
+        <span id="minutes">00</span>:<span id="seconds">00</span>
+    </div>
     <!-- Create a table to be updated by updateTable -->
     <h2>Results</h2>
     <div class="chart-container">

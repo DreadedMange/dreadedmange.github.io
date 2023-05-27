@@ -145,3 +145,15 @@ th, td {
   border: 1px solid black;
   padding: 5px;
 }
+
+#button-container,
+#timer {
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: 20px;
+}
+
+#omaha_score_true,
+#omaha_score_user {
+  min-height: 20px;   /* Set this to the height you want to reserve */
+}
