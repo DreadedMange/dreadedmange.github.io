@@ -154,6 +154,9 @@ th, td {
 }
 
 #omaha_score_true,
-#omaha_score_user {
+#omaha_score_user,
+#Holdem_score_true,
+#Holdem_score_user {
   min-height: 20px;   /* Set this to the height you want to reserve */
+  max-height: 20px;   /* Set this to the height you want to reserve */
 }
