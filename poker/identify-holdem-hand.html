@@ -498,7 +498,7 @@
                 
                 handCategory=categories[scoreSelectedHand.category];
                 // make a string of handCategor plus 'correct' or 'incorrect'
-                handCategory = handCategory + '_' + picked_correct?'correct':'incorrect';
+                handCategory = handCategory + '_' + (picked_correct?'correct':'incorrect');
                 // add google analytics event to record the time spent on the hand, and whether the user was correct, and the hand category
                 gtag('event', 'identify_hand', {
                     'event_category': 'holdem_hand',
