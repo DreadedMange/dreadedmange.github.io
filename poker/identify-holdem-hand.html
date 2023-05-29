@@ -16,7 +16,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holdem Hand - now with (local) memory!</title>
+    <title>Texas Hold'em Hand</title>
     <link rel="stylesheet" href="poker.css" />
     <script src="js/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -496,9 +496,9 @@
                     container.innerHTML = ``;
                 }
                 
-                handCategory=categories[scoreSelectedHand.category];
+                handCategory=categories[scoreHoldemBestHand.category];
                 // make a string of handCategor plus 'correct' or 'incorrect'
-                handCategory = handCategory + '_' + (picked_correct?'correct':'incorrect');
+                handCategory = 'holdem_' + handCategory + '_' + (picked_correct?'correct':'incorrect');
                 // add google analytics event to record the time spent on the hand, and whether the user was correct, and the hand category
                 gtag('event', 'identify_hand', {
                     'event_category': 'holdem_hand',
@@ -577,7 +577,7 @@
 </head>
 
 <body>
-    <h1>Holdem Hand - Select 3 board cards and 2 hole cards</h1>
+    <h1>Holdem Hand</h1>
     <button class="collapsible">Show/Hide Hints</button>
     <div class="content">
         <p>Here are some hints for identifying Holdem poker hands, sorted from highest to lowest rank:</p>
