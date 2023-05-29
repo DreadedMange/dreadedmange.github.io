@@ -496,6 +496,16 @@
 
                     container.innerHTML = ``;
                 }
+                handCategory=categories[scoreSelectedHand.category];
+                // add google analytics event to record the time spent on the hand, and whether the user was correct, and the hand category
+                gtag('event', 'omaha_hand', {
+                    'event_category': 'omaha_hand',
+                    'event_label': handCategory,
+                    'value': elapsedTime,
+                    'correct': picked_correct
+                });
+
+            
             });
 
             // Enable card selection when the draw button is clicked
