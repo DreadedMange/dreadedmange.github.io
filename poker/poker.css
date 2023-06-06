@@ -102,17 +102,30 @@
   /* Adjust this value to control the maximum height */
 }
 
+.collapsible-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; /* Optional: Adds space around items */
+}
+
+/* Style the buttons that are used to open and close the accordion panel */
 .collapsible {
-  background-color: #f1f1f1;
-  color: #444;
+  background-color: #007BFF;
+  color: white;
   cursor: pointer;
   padding: 10px;
-  width: 100%;
+  width: auto;
   border: none;
-  text-align: left;
+  text-align: center;
   outline: none;
   font-size: 18px;
+  transition: background-color 0.3s ease;
 }
+
+.collapsible:hover {
+  background-color: #0056b3;
+}
+
 
 .content {
   padding: 0 18px;
@@ -146,17 +159,24 @@ th, td {
   padding: 5px;
 }
 
-#button-container,
-#timer {
-    display: inline-block;
-    vertical-align: middle;
-    margin-top: 20px;
+#button-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 20px;
 }
+
+#timer {
+  margin-left: 20px;  /* Adjust the value to create the amount of space you want */
+}
+
 
 #omaha_score_true,
 #omaha_score_user,
 #Holdem_score_true,
-#Holdem_score_user {
+#Holdem_score_user,
+#score_true,
+#score_user {
   min-height: 20px;   /* Set this to the height you want to reserve */
   max-height: 20px;   /* Set this to the height you want to reserve */
 }

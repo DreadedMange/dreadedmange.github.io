@@ -20,569 +20,27 @@
     <link rel="stylesheet" href="poker.css" />
     <script src="js/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="js/gpt-poker-min.js?v=1.0.1"></script>
-    <!--script src="gpt-poker.js?v=1.0.0"></script-->
-
-    <script>
-        /*import { createDeck, shuffleDeck, scoreHand, getHandDescription, bestHoldemHand, categories, getSuitCharColor } from './gpt-poker.js';*/
-        function createConfetti() {
-            // You can adjust the confetti settings by passing an options object to the confetti() function
-            const confettiSettings = {
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-            };
-            confetti(confettiSettings);
-        }
-
-        function createPerformanceChart(handCategoryTable) {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-
-            const labels = Object.keys(handCategoryTable);
-            const correctData = labels.map((label) => handCategoryTable[label].correct);
-            const incorrectData = labels.map((label) => handCategoryTable[label].incorrect);
-
-            const chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Correct',
-                            data: correctData,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                        },
-                        {
-                            label: 'Incorrect',
-                            data: incorrectData,
-                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1,
-                        },
-                    ],
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                        },
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                    },
-                },
-            });
-
-            return chart;
-        }
-
-
-
-        // declare deck, board, hole, and bestHand variables
-        let HoldemBoard, HoldemHole, HoldemBestHand;
-
-        // initialize a table to keep track of the number of correct and incorrect guesses,
-        // by hand category
-        // It'll be stored in local storage so we can keep track of the user's performance
-        let handCategoryTable = {
-            'high card': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'pair': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'two pair': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'three of a kind': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'straight': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'flush': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'full house': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'four of a kind': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-            'straight flush': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 }
-        };
-
-
-        // declare a variable to keep track of the performance chart
-        let performanceChart;
-
-        // Create a function updateTable(bCorrect, HoldemHand) that will update the table with the number of correct and incorrect guesses
-        function updateTable(bCorrect, HoldemHand, timeSpent) {
-            const score = scoreHand(HoldemHand);
-            const handCategory = categories[score.category];
-
-            // get the stored table from local storage
-            const storedTable = localStorage.getItem('holdem_handCategoryTable');
-            if (storedTable) {
-                // if there is a stored table, use it
-                handCategoryTable = JSON.parse(storedTable);
-            }
-
-            // update the table
-            if (bCorrect) {
-                handCategoryTable[handCategory].correct++;
-                handCategoryTable[handCategory].secondsCorrect += timeSpent;
-            } else {
-                handCategoryTable[handCategory].incorrect++;
-                handCategoryTable[handCategory].secondsIncorrect += timeSpent;
-            }
-
-
-
-            // handCategoryTable has been updated. Now save it to local storage.
-            localStorage.setItem('holdem_handCategoryTable', JSON.stringify(handCategoryTable));
-            updateGraphAndTable(handCategoryTable);
-        }
-        function updateGraphAndTable(handCategoryTable) {
-            // Calculate the total number of correct and incorrect guesses
-            var totalCorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
-                return total + handCategoryTable[handCategory].correct;
-            }, 0);
-
-            var totalIncorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
-                return total + handCategoryTable[handCategory].incorrect;
-            }, 0);
-
-            if (totalCorrect > 0 || totalIncorrect > 0) {
-                var totalPercentCorrect = (totalCorrect / (totalCorrect + totalIncorrect)) * 100;
-            } else {
-                var totalPercentCorrect = 0;
-            }
-            // calculate total time spent on correct and incorrect guesses
-            var totalSecondsCorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
-                return total + handCategoryTable[handCategory].secondsCorrect;
-            }, 0);
-            var totalSecondsIncorrect = Object.keys(handCategoryTable).reduce((total, handCategory) => {
-                return total + handCategoryTable[handCategory].secondsIncorrect;
-            }, 0);
-            // calculate average time spent on correct and incorrect guesses
-            if (totalCorrect > 0) {
-                var averageSecondsCorrect = totalSecondsCorrect / totalCorrect;
-            } else {
-                var averageSecondsCorrect = 0;
-            }
-            if (totalIncorrect > 0) {
-                var averageSecondsIncorrect = totalSecondsIncorrect / totalIncorrect;
-            } else {
-                var averageSecondsIncorrect = 0;
-            }
-
-            // Update the table in the DOM
-            const table = document.getElementById('hand_category_table');
-            table.innerHTML = `
-    <tr>
-      <th>Hand Category</th>
-      <th>Correct</th>
-      <th>Incorrect</th>
-      <th>Percent Correct</th>
-      <th>Total Time Correct</th>
-        <th>Average Time Correct (s)</th>
-        <th>Total Time Incorrect</th>
-        <th>Average Time Incorrect (s)</th>
-    </tr>
-    ${Object.keys(handCategoryTable).map((handCategory) => {
-                const correct = handCategoryTable[handCategory].correct;
-                const incorrect = handCategoryTable[handCategory].incorrect;
-                const total = correct + incorrect;
-                const percentCorrect = total > 0 ? ((correct / total) * 100).toFixed(0) : '-';
-                const minutesCorrect = Math.floor(handCategoryTable[handCategory].secondsCorrect / 60);
-                const secondsCorrect = handCategoryTable[handCategory].secondsCorrect % 60;
-                const minutesIncorrect = Math.floor(handCategoryTable[handCategory].secondsIncorrect / 60);
-                const secondsIncorrect = handCategoryTable[handCategory].secondsIncorrect % 60;
-                const averageSecondsCorrect = handCategoryTable[handCategory].secondsCorrect / correct;
-                const averageSecondsIncorrect = handCategoryTable[handCategory].secondsIncorrect / incorrect;
-                return `
-        <tr>
-          <td>${handCategory}</td>
-          <td>${correct}</td>
-          <td>${incorrect}</td>
-          <td>${percentCorrect}%</td>
-            <td>${minutesCorrect}:${secondsCorrect < 10 ? '0' : ''}${secondsCorrect}</td>
-            <td>${isNaN(averageSecondsCorrect) ? '-' : averageSecondsCorrect.toFixed(1)}</td>
-            <td>${minutesIncorrect}:${secondsIncorrect < 10 ? '0' : ''}${secondsIncorrect}</td>
-            <td>${isNaN(averageSecondsIncorrect) ? '-' : averageSecondsIncorrect.toFixed(1)}</td>
-
-        </tr>
-      `;
-            }).join('')}
-    <tr>
-      <td>Total</td>
-      <td>${Object.keys(handCategoryTable).reduce((total, handCategory) => {
-                return total + handCategoryTable[handCategory].correct;
-            }, 0)}</td>
-      <td>${Object.keys(handCategoryTable).reduce((total, handCategory) => {
-                return total + handCategoryTable[handCategory].incorrect;
-            }, 0)}</td>
-            <td>${totalPercentCorrect.toFixed(0)}%</td>
-            <td>${Math.floor(totalSecondsCorrect / 60)}m:${(totalSecondsCorrect % 60) < 10 ? '0' : ''}${(totalSecondsCorrect % 60)}s</td>
-            <td>${averageSecondsCorrect.toFixed(1)}</td>
-            <td>${Math.floor(totalSecondsIncorrect / 60)}m:${(totalSecondsIncorrect % 60) < 10 ? '0' : ''}${(totalSecondsIncorrect % 60)}s</td>
-            <td>${averageSecondsIncorrect.toFixed(1)}</td>
-    </tr>
-  `;
-            // Update the performance chart
-            if (!performanceChart) {
-                performanceChart = createPerformanceChart(handCategoryTable);
-            } else {
-                const labels = Object.keys(handCategoryTable);
-                performanceChart.data.labels = labels;
-                performanceChart.data.datasets[0].data = labels.map((label) => handCategoryTable[label].correct);
-                performanceChart.data.datasets[1].data = labels.map((label) => handCategoryTable[label].incorrect);
-                performanceChart.update();
-            }
-        } // end updateGraphAndTable
-
-
-
-
-        // render cards to the DOM
-        function renderCards(cards, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            cards.forEach((card) => {
-                const cardDiv = document.createElement('div');
-                cardDiv.classList.add('card');
-                // Set the data-rank and data-suit attributes
-                cardDiv.dataset.rank = card.rank;
-                cardDiv.dataset.suit = card.suit;
-                cardDiv.innerHTML = `
-                    <div class="card-rank">${card.rank}</div>
-                    <div class="card-suit">${getSuitCharColor(card.suit)}</div>
-                `;
-                container.appendChild(cardDiv);
-            });
-        }
-
-        // Takes a poker hand and a container id and renders a text description
-        // of the hand and it's score to the DOM
-        function renderHandScore(hand, openingText, containerId) {
-            const container = document.getElementById(containerId);
-            const handDescription = getHandDescription(hand);
-            container.innerHTML = `
-                <div>${openingText} ${handDescription}</div>
-            `;
-        }
-
-        function drawHoldemHand() {
-            const deck = shuffleDeck(createDeck());
-            HoldemBoard = deck.slice(0, 5);
-            HoldemHole = deck.slice(5, 7);
-
-            // for testing set the board and hole cards to a known hand
-            /*
-            HoldemBoard = parseHand('4h7cQcQd4d');
-            HoldemHole = parseHand('5c4s4c5s');
-            */
-            renderCards(HoldemBoard, 'Holdem_board');
-            renderCards(HoldemHole, 'Holdem_hole');
-
-            // We need to clear the best hand left over from prior iteration
-            const Holdem_score_true = document.getElementById('Holdem_score_true');
-            Holdem_score_true.innerHTML = `2. Click Confirm`;
-            const Holdem_score_user = document.getElementById('Holdem_score_user');
-            Holdem_score_user.innerHTML = `1. Pick your cards`;
-        }
-
-
-        // Render cards with class adjusted to show correct or incorrect selection
-        function renderAlternateCards(HoldemBestHand) {
-            const hole = document.getElementById('Holdem_hole');
-            const board = document.getElementById('Holdem_board');
-            const holeCards = hole.getElementsByClassName('card');
-            const boardCards = board.getElementsByClassName('card');
-
-            // Helper function to check if a card is in the HoldemBestHand array
-            const isCardInBestHand = (card) => {
-                return HoldemBestHand.some(
-                    (bestHandCard) => bestHandCard.rank === card.rank && bestHandCard.suit === card.suit
-                );
-            };
-
-            // Update the hole cards
-            for (const card of holeCards) {
-                const cardData = { rank: card.dataset.rank, suit: card.dataset.suit };
-                if (card.classList.contains('selected')) {
-                    card.classList.remove('selected');
-                    if (!isCardInBestHand(cardData)) {
-                        card.classList.add('selected-wrong');
-                    } else {
-                        card.classList.add('selected-right');
-                    }
-                } else if (isCardInBestHand(cardData)) {
-                    card.classList.add('should-have-selected');
-                } else {
-                    card.classList.add('unselected-right')
-                }
-            }
-
-            // Update the board cards
-            for (const card of boardCards) {
-                const cardData = { rank: card.dataset.rank, suit: card.dataset.suit };
-                if (card.classList.contains('selected')) {
-                    card.classList.remove('selected');
-                    if (!isCardInBestHand(cardData)) {
-                        card.classList.add('selected-wrong');
-                    } else {
-                        card.classList.add('selected-right');
-                    }
-                } else if (isCardInBestHand(cardData)) {
-                    card.classList.add('should-have-selected');
-                } else {
-                    card.classList.add('unselected-right')
-                }
-            }
-        }
-
-        // determine if the user has selected the correct cards
-        function allSelectedCardsAreCorrect(HoldemBestHand) {
-            const hole = document.getElementById('Holdem_hole');
-            const board = document.getElementById('Holdem_board');
-            const holeSelectedCards = hole.getElementsByClassName('card selected');
-            const boardSelectedCards = board.getElementsByClassName('card selected');
-
-            if (holeSelectedCards.length !== 2 || boardSelectedCards.length !== 3) {
-                return false;
-            }
-
-            const selectedCards = [...holeSelectedCards, ...boardSelectedCards];
-
-            return selectedCards.every((selectedCard) => {
-                const cardData = { rank: selectedCard.dataset.rank, suit: selectedCard.dataset.suit };
-                return HoldemBestHand.some(
-                    (bestHandCard) => bestHandCard.rank === cardData.rank && bestHandCard.suit === cardData.suit
-                );
-            });
-        }
-
-
-        // Add event listeners to the buttons
-
-        // We'll use the event delegation pattern to add a single event listener to the board
-        // and then check to see if the click was on a card
-        document.addEventListener('DOMContentLoaded', () => {
-            // Get the containers for both the hole and the board
-            const hole = document.getElementById('Holdem_hole');
-            const board = document.getElementById('Holdem_board');
-            const HoldemConfirmBtn = document.getElementById('HoldemConfirmBtn');
-            const HoldemDrawBtn = document.getElementById('HoldemDrawBtn');
-            const ResetStats = document.getElementById('ResetStats');
-
-            // Card selection flag
-            let cardSelectionEnabled = true;
-
-            // Timer variables
-            totalSeconds = 0;
-
-            // Function to update the button state
-            const updateButtonState = () => {
-                const selectedHoleCards = hole.getElementsByClassName('selected').length;
-                const selectedBoardCards = board.getElementsByClassName('selected').length;
-                const totalSelectedCards = selectedHoleCards + selectedBoardCards;
-                HoldemConfirmBtn.disabled = totalSelectedCards !== 5;
-            };
-
-            // Function to reset local storage when resetStats button is pressed
-            ResetStats.addEventListener('click', () => {
-                localStorage.removeItem('holdem_handCategoryTable');
-                handCategoryTable = {
-                    'high card': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'pair': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'two pair': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'three of a kind': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'straight': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'flush': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'full house': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'four of a kind': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 },
-                    'straight flush': { correct: 0, incorrect: 0, secondsCorrect: 0, secondsIncorrect: 0 }
-                };
-                updateGraphAndTable(handCategoryTable);
-            });
-
-            // Create a function to handle card clicks
-            const handleCardClick = (event) => {
-                if (!cardSelectionEnabled) {
-                    return;
-                }
-
-                // Check to see if the click was on a card
-                if (event.target.classList.contains('card')) {
-                    // Count the number of selected cards in total
-                    const selectedCards = document.getElementsByClassName('selected').length;
-
-                    // Check if the card is already selected
-                    const isSelected = event.target.classList.contains('selected');
-
-                    // Define the maximum number of allowed selected cards in total
-                    const maxSelectedCards = 5;
-
-                    // Toggle the selected class on the card if the constraints are met
-                    if (isSelected || selectedCards < maxSelectedCards) {
-                        event.target.classList.toggle('selected');
-                    }
-
-                    // Update the button state after each click
-                    updateButtonState();
-                }
-            };
-
-
-            // Add the click event listeners to both the hole and the board
-            hole.addEventListener('click', handleCardClick);
-            board.addEventListener('click', handleCardClick);
-
-            // Add a click event listener to the confirm button
-            // Disable card selection when the confirm button is clicked
-            HoldemConfirmBtn.addEventListener('click', () => {
-                cardSelectionEnabled = false;
-                HoldemConfirmBtn.disabled = true; // disable when the button is clicked
-                HoldemDrawBtn.disabled = false; // enable the draw button
-
-                // timer code
-                clearInterval(timerVar);
-                const elapsedTime = totalSeconds;
-
-                // create a string representation of the time
-                const minutes = Math.floor(elapsedTime / 60);
-                const seconds = elapsedTime % 60;
-                const timeString = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-                // now that the user has confirmed their selection, 
-                // we can render the hand and score
-                const selectedHoleCards = hole.getElementsByClassName('selected');
-                const selectedBoardCards = board.getElementsByClassName('selected');
-
-                // find the best hand from the board and hole cards
-                HoldemBestHand = bestHoldemHand(HoldemBoard, HoldemHole);
-                const selectedHand = [...selectedHoleCards, ...selectedBoardCards].map((card) => {
-                    return {
-                        rank: card.dataset.rank,
-                        suit: card.dataset.suit,
-                    };
-                });
-                const scoreSelectedHand = scoreHand(selectedHand);
-                const scoreHoldemBestHand = scoreHand(HoldemBestHand);
-
-                // make some confetti if the user chose correctly
-                let picked_correct;
-                let pickText;
-                if (scoreSelectedHand.score === scoreHoldemBestHand.score) {
-                    createConfetti();
-                    // set a variable to indicate that the user has won
-                    // this will be used to keep track of correct and incorrect answers
-                    picked_correct = true;
-                    // set the best hand to the selected hand since 
-                    // the user has selected the correct hand
-                    // Note there may be more than one correct answer so 
-                    // we'll use the one the user chose since it has the same
-                    // score as the best hand our algorithm found
-                    HoldemBestHand = selectedHand;
-                    pickText = `Correct!:`;
-                } else {
-                    picked_correct = false;
-                    pickText = `Wrong!:`;
-                }
-
-                // Update table with correct/incorrect answer, as well as the category of hand
-                updateTable(picked_correct, HoldemBestHand, elapsedTime);
-
-                // render the selected cards to indicate correct or incorrect selection
-                renderAlternateCards(HoldemBestHand);
-
-                renderHandScore(selectedHand, pickText, 'Holdem_score_user');
-                if (!picked_correct) {
-                    renderHandScore(HoldemBestHand, 'Best Hand:', 'Holdem_score_true');
-                } else {
-                    const container = document.getElementById('Holdem_score_true');
-                    // We need to insert a line of html so the rest of the page doesn't shift
-
-                    container.innerHTML = ``;
-                }
-                
-                handCategory=categories[scoreHoldemBestHand.category];
-                // make a string of handCategor plus 'correct' or 'incorrect'
-                handCategory = 'holdem_' + handCategory + '_' + (picked_correct?'correct':'incorrect');
-                // add google analytics event to record the time spent on the hand, and whether the user was correct, and the hand category
-                gtag('event', 'identify_hand', {
-                    'event_category': 'holdem_hand',
-                    'event_label': handCategory, // event label will be hand category plus whether the user was correct
-                    'value': elapsedTime,
-                });
-
-            });
-
-            // Enable card selection when the draw button is clicked
-            HoldemDrawBtn.addEventListener('click', () => {
-                cardSelectionEnabled = true;
-                HoldemDrawBtn.disabled = true; // disable when the button is clicked
-                drawHoldemHand();
-                updateButtonState();
-                // Stop the timer - shouldn't be necessary but just in case
-                clearInterval(timerVar);
-
-                // Reset the timer
-                totalSeconds = 0;
-                document.getElementById("minutes").innerHTML = '00';
-                document.getElementById("seconds").innerHTML = '00';
-
-                // Restart the timer
-                timerVar = setInterval(countTimer, 1000);
-            });
-            const coll = document.querySelector('.collapsible');
-
-            coll.addEventListener('click', function () {
-                this.classList.toggle('active');
-                const content = this.nextElementSibling;
-
-                if (content.style.maxHeight) {
-                    content.style.maxHeight = null;
-                } else {
-                    content.style.maxHeight = content.scrollHeight + 'px';
-                }
-            });
-
-            // Pause the timer when the page is hidden
-            document.addEventListener('visibilitychange', function () {
-                if (document.visibilityState === 'hidden') {
-                    clearInterval(timerVar);
-                } else {
-                    timerVar = setInterval(countTimer, 1000);
-                }
-            });
-            // draw first hand when the page loads
-            drawHoldemHand();
-            updateButtonState();
-            HoldemDrawBtn.disabled = true;
-
-            // update the results graph if there are results stored in local storage
-            const storedTable = localStorage.getItem('holdem_handCategoryTable');
-            if (storedTable) {
-                // check that secondsCorrect or secondsIncorrect exists for at least one hand category 
-                // and if not, delete thte table from localStorage
-                const storedTableParsed = JSON.parse(storedTable);
-                const secondsCorrectExists = Object.keys(storedTableParsed).some((handCategory) => {
-                    return storedTableParsed[handCategory].secondsCorrect > 0;
-                });
-                const secondsIncorrectExists = Object.keys(storedTableParsed).some((handCategory) => {
-                    return storedTableParsed[handCategory].secondsIncorrect > 0;
-                });
-                if (!secondsCorrectExists && !secondsIncorrectExists) {
-                    localStorage.removeItem('holdem_handCategoryTable');
-                } else {
-                    handCategoryTable = JSON.parse(storedTable);
-                    updateGraphAndTable(handCategoryTable);
-                }
-            }
-
-        });
-
-    </script>
+    <script src="js/gpt-poker-min.js?v=0.0.1"></script>
+    <script src="js/identify-poker-min.js?v=0.0.1" id="identify-poker" data-game-type="texas"></script>
+    <!--script src="gpt-poker.js?v=1.0.2"></script-->
+    <!--script src="identify-poker.js" id="identify-poker" data-game-type="texas"></script-->
 </head>
 
 <body>
     <h1>Holdem Hand</h1>
-    <button class="collapsible">Show/Hide Hints</button>
+    <div class="collapsible-container">
+        <button class="collapsible">Click for Instructions</button>
+        <button class="collapsible">Settings</button>
+    </div>
+
     <div class="content">
-        <p>Here are some hints for identifying Holdem poker hands, sorted from highest to lowest rank:</p>
+        <p>Click the best 5 cards and then click Confirm. Here are some hints for identifying Holdem poker
+            hands,
+            sorted
+            from highest to lowest rank:</p>
         <p>In Holdem, you find the best 5 cards using the the shared community cards (the "board")
-            and two cards from your own hand (the "hole"). You do not necessarily need to use your hole cards. The
+            and two cards from your own hand (the "hole"). You do not necessarily need to use your hole cards.
+            The
             following
             strategy
             may be helpful - with this approach you can stop looking as soon as you find a match.</p>
@@ -590,7 +48,9 @@
             <li>Check for straight flush possibilities:
                 <ul>
                     <li>Arrange the community cards mentally from highest to lowest.</li>
-                    <li>Search for three or more community cards that are in a 5-card span (example J-T-8-7) and of the
+                    <li>Search for three or more community cards that are in a 5-card span (example J-T-8-7) and
+                        of
+                        the
                         same suit.
                     </li>
                     <li>If found, see if your hole cards can complete (or extend!) the straight flush.</li>
@@ -598,7 +58,8 @@
             </li>
             <li>Check for four of a kind:
                 <ul>
-                    <li>Note that four of a kind is only possible if there is a pair or three of a kind on the board.
+                    <li>Note that four of a kind is only possible if there is a pair or three of a kind on the
+                        board.
                     </li>
                 </ul>
             </li>
@@ -611,9 +72,12 @@
             <li>Check for flush possibilities:
                 <ul>
                     <li>Look for at least three community cards of the same suit.</li>
-                    <li>If there are at least three of one suit, check if you can make a flush using one or two of your
+                    <li>If there are at least three of one suit, check if you can make a flush using one or two
+                        of
+                        your
                         hole cards.</li>
-                    <li>Note that even if the board flush cards are higher than the ones in your hand, the flush hole
+                    <li>Note that even if the board flush cards are higher than the ones in your hand, the flush
+                        hole
                         cards will determine how your hand compares to other players.</li>
                 </ul>
             </li>
@@ -627,25 +91,32 @@
             </li>
             <li>Check for three of a kind:
                 <ul>
-                    <li>When looking for three of a kind, note that it is not possible unless you have a pair in the
+                    <li>When looking for three of a kind, note that it is not possible unless you have a pair in
+                        the
                         hole that matches a card on the board ("a set"),
                         or if there is a pair on the board and you have one in the hole ("trips").</li>
                 </ul>
             </li>
             <li>Check for two pair hands:
                 <ul>
-                    <li>If there's a pair in the community cards and a pair in your hole cards, you can form two pairs.
+                    <li>If there's a pair in the community cards and a pair in your hole cards, you can form two
+                        pairs.
                     </li>
-                    <li>If there are two distinct community cards that match one each of your hole cards, you can form
+                    <li>If there are two distinct community cards that match one each of your hole cards, you
+                        can
+                        form
                         two pairs.</li>
-                    <li>If there's a pair on the board and one card in your hole cards that matches another community
+                    <li>If there's a pair on the board and one card in your hole cards that matches another
+                        community
                         card, you can form two pairs (which form a "two-pair" hand).</li>
                 </ul>
             </li>
 
             <li>Check for pair:
                 <ul>
-                    <li>Identify if there's a single card on the board that matches with a card in your hole cards, or a
+                    <li>Identify if there's a single card on the board that matches with a card in your hole
+                        cards,
+                        or a
                         pair on the board.</li>
                 </ul>
             </li>
@@ -657,31 +128,42 @@
         </ol>
     </div>
 
+    <div class="content">
+        <input type="checkbox" id="setting_use_timer" name="setting_use_timer" value="use_timer" checked>
+        <label for="setting_use_timer">Show Timer</label><br>
+        <input type="checkbox" id="setting_more_straights" name="setting_more_straights" value="more_straights">
+        <label for="setting_more_straights">More Straights</label><br>
+    </div>
+
 
     <div class="card-selection">
         <span class="label">Board:</span>
-        <div id="Holdem_board"></div>
+        <div id="board"></div>
     </div>
     <div class="card-selection">
         <span class="label">Hole:</span>
-        <div id="Holdem_hole"></div>
+        <div id="hole"></div>
     </div>
-    <div id="Holdem_score_user"></div>
-    <div id="Holdem_score_true"></div>
+    <div id="score_user"></div>
+    <div id="score_true"></div>
     <!-- Buttons and Timer HTML -->
     <div id="button-container">
-        <button id="HoldemDrawBtn">New Cards</button>
-        <button id="HoldemConfirmBtn">Confirm</button>
+        <button id="DrawBtn">New Cards</button>
+        <button id="ConfirmBtn">Confirm</button>
+        <span id="timer"></span>
     </div>
-    <div id="timer">
-        <span id="minutes">00</span>:<span id="seconds">00</span>
-    </div>
+
     <!-- Create a table to be updated by updateTable -->
     <h2>Results</h2>
     <div class="chart-container">
         <canvas id="performanceChart"></canvas>
     </div>
-    <table id="hand_category_table"></table>
+    <div class="collapsible-container">
+        <button class="collapsible">Results Table - Click to show/hide</button>
+    </div>
+    <div class="content">
+        <table id="hand_category_table"></table>
+    </div>
     <div id="button-container">
         <button id="ResetStats">Reset Stats</button>
     </div>
