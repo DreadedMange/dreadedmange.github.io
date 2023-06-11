@@ -11,7 +11,6 @@
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
-
         gtag('config', 'G-Z369DVSQ0F');
     </script>
     <meta charset="UTF-8">
@@ -20,10 +19,22 @@
     <link rel="stylesheet" href="poker.css" />
     <script src="js/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="js/gpt-poker-min.js?v=0.0.1"></script>
-    <script src="js/identify-poker-min.js?v=0.0.1" id="identify-poker" data-game-type="omaha"></script>
-    <!--script src="gpt-poker.js?v=1.0.2"></script-->
-    <!--script src="identify-poker.js" id="identify-poker" data-game-type="omaha"></script-->
+    <script>
+        var script1, script2;
+        /*if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {*/
+        if (false) {
+            script1 = "gpt-poker.js?v=1.0.3";
+            script2 = "identify-poker.js";
+        } else {
+            script1 = "js/gpt-poker-min.js?v=0.0.2";
+            script2 = "js/identify-poker-min.js?v=0.0.2";
+        }
+    
+        /* Write the scripts - note the ipt> at the end of the second one is split to avoid the script being parsed by the browser */
+        document.write('<script src="' + script1 + '"></scr' + 'ipt>');
+        document.write('<script src="' + script2 + '" id="identify-poker" data-game-type="omaha"></scr' + 'ipt>');
+    </script>
+    
 </head>
 
 <body>
@@ -146,10 +157,11 @@
     </div>
     <div class="content">
         <table id="hand_category_table"></table>
+        <div id="button-container">
+            <button id="ResetStats">Reset Stats</button>
+        </div>
     </div>
-    <div id="button-container">
-        <button id="ResetStats">Reset Stats</button>
-    </div>
+
 </body>
 
 </html>

@@ -135,6 +135,13 @@
   background-color: #f1f1f1;
 }
 
+/* table container needs to be able to scroll */
+.table-container {
+  overflow-x: auto;
+  /* Optional: Set a specific height */
+  /* Optional: Add a scrollbar */
+}
+
 .card-section {
   position: relative;
 }
