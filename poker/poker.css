@@ -11,6 +11,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   background: linear-gradient(to right, #FFFFFF, #CCE5FF);
   /*background: linear-gradient(to right, #FFFFFF, #96c6ee);*/
+  padding-right: 1em; /* right and left padding are the same */
+  padding-left: 1em;
+  padding-top: 0%; /* top and bottom padding are the same */
   margin: 0;
 }
 
