@@ -7,6 +7,18 @@
 <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
 */
 
+html {
+  margin: 0;
+  padding: 0;
+  overflow-y: scroll;
+  scrollbar-width: thin; /* for Firefox */
+}
+
+body::-webkit-scrollbar {
+  width: 0.5em; /* for Chrome, Safari and Opera */
+}
+
+
 body {
   font-family: Arial, Helvetica, sans-serif;
   background: linear-gradient(to right, #FFFFFF, #CCE5FF);
@@ -17,31 +29,103 @@ body {
   margin: 0;
 }
 
+.game-container {
+  max-width: 800px; /* Sets the maximum width */
+  width: 100%; /* Makes it responsive for smaller screen sizes */
+  margin: 0 auto; /* Centers the container */
+}
+
+
 .card {
-  display: inline-block;
+  /*display: inline-block;*/
+  display: inline-flex;
+  flex-direction: row; /* side-by-side for non-mobile devices */
+  justify-content: center;
+  align-items: flex-start; /* start at the top of the card */
+  padding-top: 10px; /* Adjust this value to change the vertical position of the card */
   width: 80px;
   height: 120px;
   border: 3px solid black;
   padding: 10px;
   margin: 5px;
   margin-top: 20px;
-  font-size: 20px;
+  /*font-size: 20px;*/
   text-align: center;
   cursor: pointer;
   user-select: none;
 }
+.card-rank {
+  font-size: 42px;
+  font-weight: bold;
+  /* display: inline-block;*/
+  pointer-events: none;
+}
 
-/* Media query for mobile devices */
-@media screen and (max-width: 480px) {
+.card-suit {
+  font-size: 42px;
+  /*display: inline-block;*/ 
+  /*margin-left: 5px;*/
+  pointer-events: none;
+}
+
+.red {
+  color: red;
+}
+
+.black {
+  color: black;
+}
+
+/* Media query for mobile devices - 5 cards don't fit across under 630 (card size 80) */
+@media screen and (max-width: 630px) {
+
   .card {
-    width: 30px;
+    flex-direction: column; /* stack on mobile */
+    width: 40px;
     height: 75px;
-    font-size: 12px;
-    padding: 6px;
+    padding: 3px;
     margin: 3px;
     margin-top: 10px;
+    align-items: center; /* Center items vertically in the card */
+    justify-content: center; /* Center items horizontally in the card */
+  }
+  .card-suit {
+    margin-top: 0px; /* reduced margin */
+    font-size: 36px;
+    line-height: 1; /* added line-height */
+  }
+  .card-rank {
+    /* get suit and rank closer to each other vertically */
+    margin-bottom: 0px;
+    font-size: 30px;
+    line-height: 1; /* added line-height */
   }
 }
+
+@media screen and (max-width: 326px) {
+  body {
+    padding-left: 0em;
+    padding-right: 0em;
+  }
+  .card {
+    width: 48px; /* Adjust this value for better fit */
+    height: 75px; /* Adjust this value for better fit */
+    padding: 0px;
+    margin: 1px;
+    margin-top: 5px;
+    /* adjust font sizes and other styles as needed */
+  }
+
+  .card-suit {
+    font-size: 24px; /* Adjust this value for better fit */
+  }
+
+  .card-rank {
+    font-size: 24px; /* Adjust this value for better fit */
+  }
+}
+
+
 
 .selected {
   background-color: cyan;
@@ -82,27 +166,7 @@ body {
   /* Optional: Add a smooth transition effect */
 }
 
-.card-rank {
-  font-size: 36px;
-  font-weight: bold;
-  display: inline-block;
-  pointer-events: none;
-}
 
-.card-suit {
-  font-size: 36px;
-  display: inline-block;
-  margin-left: 5px;
-  pointer-events: none;
-}
-
-.red {
-  color: red;
-}
-
-.black {
-  color: black;
-}
 
 .chart-container {
   max-width: 80%;
@@ -114,11 +178,10 @@ body {
 .collapsible-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between; /* Optional: Adds space around items */
+  justify-content: space-between;
 }
 
-/* Style the buttons that are used to open and close the accordion panel */
-.collapsible {
+.collapsible-button, .collapsible-link {
   background-color: #007BFF;
   color: white;
   cursor: pointer;
@@ -131,22 +194,32 @@ body {
   transition: background-color 0.3s ease;
 }
 
-.collapsible:hover {
+.collapsible-button:hover, .collapsible-link:hover {
   background-color: #0056b3;
 }
 
-.collapsible-container a:hover {
-  cursor: pointer;
+.collapsible-link {
+  text-decoration: none; /* Removes the underline from the link */
+  color: white; /* Makes the link text white */
 }
 
-
-
-.content {
+.collapsible-content {
   padding: 0 18px;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-out;
 }
+
+/* Move the Settings button to the right */
+#settings-button {
+  order: 1;
+}
+
+/* Make the Home link the first item */
+.collapsible-link {
+  order: -1;
+}
+
 
 /* table container needs to be able to scroll */
 .table-container {

@@ -27,141 +27,158 @@
             script2 = "identify-poker.js";
         } else {
             script1 = "js/gpt-poker-min.js?v=0.0.3";
-            script2 = "js/identify-poker-min.js?v=0.0.4";
+            script2 = "js/identify-poker-min.js?v=0.0.5";
         }
-    
+
         /* Write the scripts - note the ipt> at the end of the second one is split to avoid the script being parsed by the browser */
         document.write('<script src="' + script1 + '"></scr' + 'ipt>');
         document.write('<script src="' + script2 + '" id="identify-poker" data-game-type="omaha"></scr' + 'ipt>');
     </script>
-    
+
 </head>
 
 <body>
-    <div class="collapsible-container">
-        <a href="/" class="collapsible">Home</a>
-        <button class="collapsible">Click for Instructions</button>
-        <button class="collapsible">Settings</button>
-    </div>
-    <h2>Omaha Hold'em - 3 from the board, 2 from the hole</h2>
-    <div class="content">
-        <p>Here are some hints for identifying Omaha poker hands, sorted from highest to lowest rank:</p>
-        <p>In Omaha, you must use exactly three cards from the shared community cards (the "board")
-            and exactly two cards from your own hand (the "hole") to form your best five-card poker hand. The following
-            strategy
-            may be helpful - with this approach you can stop looking as soon as you find a match.</p>
-        <ol>
-            <li>Check for straight flush possibilities:
-                <ul>
-                    <li>Arrange the community cards mentally from highest to lowest.</li>
-                    <li>Search for three community cards that are in a 5-card span (example J-8-7) and of the same suit.
-                    </li>
-                    <li>If found, see if you have two hole cards of the same suit that can complete the straight flush.
-                    </li>
-                </ul>
-            </li>
-            <li>Check for four of a kind:
-                <ul>
-                    <li>Note that four of a kind is only possible if there is a pair or three of a kind on the board.
-                    </li>
-                    <li>See if you can turn the pair or three of a kind on the board into four of a kind with your hole
-                        cards.</li>
-                </ul>
-            </li>
-            <li>Check for a full house:
-                <ul>
-                    <li>Identify if there's a pair or three of a kind in the community cards.</li>
-                    <li>Verify if you can form a full house using your two hole cards.</li>
-                </ul>
-            </li>
-            <li>Check for flush possibilities:
-                <ul>
-                    <li>Look for at least three community cards of the same suit.</li>
-                    <li>If there are at least three of one suit, check if you have two hole cards of the same suit to
-                        complete the flush.</li>
-                </ul>
-            </li>
-            <li>Check for straights:
-                <ul>
-                    <li>Look for at least three community cards that are within a five-card span (e.g., 7-6-4 or J-T-8).
-                    </li>
-                    <li>If found, note the missing cards and check your hole cards for two cards that can fill the gaps
-                        to complete a straight.</li>
-                    <li>Be aware that if there are more than three in a 5-card span on the board, you can only use 3
-                        still. In this situation,
-                        hole cards that pair the board can be very useful!</li>
-                </ul>
-            </li>
-            <li>Check for three of a kind:
-                <ul>
-                    <li>Identify if there are any two identical cards on the board, or a pair in the hole that matches a
-                        board card to make three of a kind.</li>
-                </ul>
-            </li>
-            <li>Check for two pair hands:
-                <ul>
-                    <li>If there's a pair in the community cards and a pair in your hole cards, you can form two pairs.
-                    </li>
-                    <li>If there are two distinct community cards that match one each of your hole cards, you can form
-                        two pairs.</li>
-                    <li>If there's a pair on the board and one card in your hole cards that matches another community
-                        card, you can form two pairs.</li>
-                </ul>
-            </li>
-
-            <li>Check for pair:
-                <ul>
-                    <li>Identify if there's a single card on the board that matches with a card in your hole cards, or a
-                        pair on the board.</li>
-                </ul>
-            </li>
-            <li>Evaluate high cards and kicker strength:
-                <ul>
-                    <li>If you don't have any strong combinations, pick the highest three cards on the board and the
-                        highest two cards in the hole.</li>
-                </ul>
-            </li>
-        </ol>
-    </div>
-
-    <div class="content">
-        <input type="checkbox" id="setting_use_timer" name="setting_use_timer" value="use_timer" checked>
-        <label for="setting_use_timer">Show Timer</label><br>
-        <input type="checkbox" id="setting_more_straights" name="setting_more_straights" value="more_straights">
-        <label for="setting_more_straights">More Straights</label><br>
-    </div>
-
-    <div class="card-selection">
-        <span class="label">Board:</span>
-        <div id="board"></div>
-    </div>
-    <div class="card-selection">
-        <span class="label">Hole:</span>
-        <div id="hole"></div>
-    </div>
-    <div id="score_user"></div>
-    <div id="score_true"></div>
-    <!-- Buttons and Timer HTML -->
-    <div id="button-container">
-        <button id="DrawBtn">New Cards</button>
-        <button id="ConfirmBtn">Confirm</button>
-        <span id="timer"></span>
-    </div>
-    <!-- Create a table to be updated by updateTable -->
-    <h2>Results</h2>
-    <div class="chart-container">
-        <canvas id="performanceChart"></canvas>
-    </div>
-    <div class="collapsible-container">
-        <button class="collapsible">Results Table - Click to show/hide</button>
-    </div>
-    <div class="content">
-        <table id="hand_category_table"></table>
-        <div id="button-container">
-            <button id="ResetStats">Reset Stats</button>
+    <div class="game-container">
+        <div class="collapsible-container">
+            <a href="/" class="collapsible-link" tabindex="1">Home</a>
+            <button class="collapsible-button" data-target="instructions-content">Help</button>
+            <button class="collapsible-button" data-target="settings-content">Settings</button>
         </div>
-    </div>
 
+        <div id="settings-content" class="collapsible-content">
+            <input type="checkbox" id="setting_use_timer" name="setting_use_timer" value="use_timer" checked>
+            <label for="setting_use_timer">Show Timer</label><br>
+            <input type="checkbox" id="setting_more_straights" name="setting_more_straights" value="more_straights">
+            <label for="setting_more_straights">More Straights (every hand has a straight but there might be something
+                even better!)</label><br>
+        </div>
+
+        <div id="instructions-content" class="collapsible-content">
+            <p>Here are some hints for identifying Omaha poker hands, sorted from highest to lowest rank:</p>
+            <p>In Omaha, you must use exactly three cards from the shared community cards (the "board")
+                and exactly two cards from your own hand (the "hole") to form your best five-card poker hand. The
+                following
+                strategy
+                may be helpful - with this approach you can stop looking as soon as you find a match.</p>
+            <ol>
+                <li>Check for straight flush possibilities:
+                    <ul>
+                        <li>Arrange the community cards mentally from highest to lowest.</li>
+                        <li>Search for three community cards that are in a 5-card span (example J-8-7) and of the same
+                            suit.
+                        </li>
+                        <li>If found, see if you have two hole cards of the same suit that can complete the straight
+                            flush.
+                        </li>
+                    </ul>
+                </li>
+                <li>Check for four of a kind:
+                    <ul>
+                        <li>Note that four of a kind is only possible if there is a pair or three of a kind on the
+                            board.
+                        </li>
+                        <li>See if you can turn the pair or three of a kind on the board into four of a kind with your
+                            hole
+                            cards.</li>
+                    </ul>
+                </li>
+                <li>Check for a full house:
+                    <ul>
+                        <li>Identify if there's a pair or three of a kind in the community cards.</li>
+                        <li>Verify if you can form a full house using your two hole cards.</li>
+                    </ul>
+                </li>
+                <li>Check for flush possibilities:
+                    <ul>
+                        <li>Look for at least three community cards of the same suit.</li>
+                        <li>If there are at least three of one suit, check if you have two hole cards of the same suit
+                            to
+                            complete the flush.</li>
+                    </ul>
+                </li>
+                <li>Check for straights:
+                    <ul>
+                        <li>Look for at least three community cards that are within a five-card span (e.g., 7-6-4 or
+                            J-T-8).
+                        </li>
+                        <li>If found, note the missing cards and check your hole cards for two cards that can fill the
+                            gaps
+                            to complete a straight.</li>
+                        <li>Be aware that if there are more than three in a 5-card span on the board, you can only use 3
+                            still. In this situation,
+                            hole cards that pair the board can be very useful!</li>
+                    </ul>
+                </li>
+                <li>Check for three of a kind:
+                    <ul>
+                        <li>Identify if there are any two identical cards on the board, or a pair in the hole that
+                            matches a
+                            board card to make three of a kind.</li>
+                    </ul>
+                </li>
+                <li>Check for two pair hands:
+                    <ul>
+                        <li>If there's a pair in the community cards and a pair in your hole cards, you can form two
+                            pairs.
+                        </li>
+                        <li>If there are two distinct community cards that match one each of your hole cards, you can
+                            form
+                            two pairs.</li>
+                        <li>If there's a pair on the board and one card in your hole cards that matches another
+                            community
+                            card, you can form two pairs.</li>
+                    </ul>
+                </li>
+
+                <li>Check for pair:
+                    <ul>
+                        <li>Identify if there's a single card on the board that matches with a card in your hole cards,
+                            or a
+                            pair on the board.</li>
+                    </ul>
+                </li>
+                <li>Evaluate high cards and kicker strength:
+                    <ul>
+                        <li>If you don't have any strong combinations, pick the highest three cards on the board and the
+                            highest two cards in the hole.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+
+        <h2>Omaha Hold'em - 3 from the board, 2 from the hole</h2>
+        <div class="card-selection">
+            <span class="label">Board:</span>
+            <div id="board"></div>
+        </div>
+        <div class="card-selection">
+            <span class="label">Hole:</span>
+            <div id="hole"></div>
+        </div>
+        <div id="score_user"></div>
+        <div id="score_true"></div>
+        <!-- Buttons and Timer HTML -->
+        <div id="button-container">
+            <button id="DrawBtn">New Cards</button>
+            <button id="ConfirmBtn">Confirm</button>
+            <span id="timer"></span>
+        </div>
+        <!-- Create a table to be updated by updateTable -->
+        <h2>Results</h2>
+        <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+        </div>
+        <div class="collapsible-container">
+            <button class="collapsible-button" data-target="results-content">Results Table - Click to show/hide</button>
+        </div>
+        <div id="results-content" class="collapsible-content">
+            <table id="hand_category_table"></table>
+            <div id="button-container">
+                <button id="ResetStats">Reset Stats</button>
+            </div>
+        </div>
+    </div> <!-- End of game-container -->
 </body>
 
 </html>

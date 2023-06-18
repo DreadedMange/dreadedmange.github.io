@@ -28,9 +28,9 @@
             script2 = "identify-poker.js";
         } else {
             script1 = "js/gpt-poker-min.js?v=0.0.3";
-            script2 = "js/identify-poker-min.js?v=0.0.4";
+            script2 = "js/identify-poker-min.js?v=0.0.5";
         }
-    
+
         /* Write the scripts - note the ipt> at the end of the second one is split to avoid the script being parsed by the browser */
         document.write('<script src="' + script1 + '"></scr' + 'ipt>');
         document.write('<script src="' + script2 + '" id="identify-poker" data-game-type="texas"></scr' + 'ipt>');
@@ -38,147 +38,154 @@
 </head>
 
 <body>
-    <div class="collapsible-container">
-        <a href="/" class="collapsible">Home</a>
-        <button class="collapsible">Instructions</button>
-        <button class="collapsible">Settings</button>
-    </div>
-    <h2>Texas Hold'em - Pick the best 5 cards</h2>
-    <div class="content">
-        <p>Click the best 5 cards and then click Confirm. Here are some hints for identifying Holdem poker
-            hands,
-            sorted
-            from highest to lowest rank:</p>
-        <p>In Holdem, you find the best 5 cards using the the shared community cards (the "board")
-            and two cards from your own hand (the "hole"). You do not necessarily need to use your hole cards.
-            The
-            following
-            strategy
-            may be helpful - with this approach you can stop looking as soon as you find a match.</p>
-        <ol>
-            <li>Check for straight flush possibilities:
-                <ul>
-                    <li>Arrange the community cards mentally from highest to lowest.</li>
-                    <li>Search for three or more community cards that are in a 5-card span (example J-T-8-7) and
-                        of
-                        the
-                        same suit.
-                    </li>
-                    <li>If found, see if your hole cards can complete (or extend!) the straight flush.</li>
-                </ul>
-            </li>
-            <li>Check for four of a kind:
-                <ul>
-                    <li>Note that four of a kind is only possible if there is a pair or three of a kind on the
-                        board.
-                    </li>
-                </ul>
-            </li>
-            <li>Check for a full house:
-                <ul>
-                    <li>Identify if there's a pair (or two) and/or three of a kind in the community cards.</li>
-                    <li>Verify if you can form a full house using your two hole cards if needed.</li>
-                </ul>
-            </li>
-            <li>Check for flush possibilities:
-                <ul>
-                    <li>Look for at least three community cards of the same suit.</li>
-                    <li>If there are at least three of one suit, check if you can make a flush using one or two
-                        of
-                        your
-                        hole cards.</li>
-                    <li>Note that even if the board flush cards are higher than the ones in your hand, the flush
-                        hole
-                        cards will determine how your hand compares to other players.</li>
-                </ul>
-            </li>
-            <li>Check for straights:
-                <ul>
-                    <li>Arrange the community cards mentally from highest to lowest.</li>
-                    <li>Search for three or more community cards that are in a 5-card span (example J-T-8-7).
-                    </li>
-                    <li>If found, see if your hole cards can complete (or extend!) the straight.</li>
-                </ul>
-            </li>
-            <li>Check for three of a kind:
-                <ul>
-                    <li>When looking for three of a kind, note that it is not possible unless you have a pair in
-                        the
-                        hole that matches a card on the board ("a set"),
-                        or if there is a pair on the board and you have one in the hole ("trips").</li>
-                </ul>
-            </li>
-            <li>Check for two pair hands:
-                <ul>
-                    <li>If there's a pair in the community cards and a pair in your hole cards, you can form two
-                        pairs.
-                    </li>
-                    <li>If there are two distinct community cards that match one each of your hole cards, you
-                        can
-                        form
-                        two pairs.</li>
-                    <li>If there's a pair on the board and one card in your hole cards that matches another
-                        community
-                        card, you can form two pairs (which form a "two-pair" hand).</li>
-                </ul>
-            </li>
-
-            <li>Check for pair:
-                <ul>
-                    <li>Identify if there's a single card on the board that matches with a card in your hole
-                        cards,
-                        or a
-                        pair on the board.</li>
-                </ul>
-            </li>
-            <li>Evaluate high cards and kicker strength:
-                <ul>
-                    <li>If you don't have any strong combinations, pick the highest five cards available.</li>
-                </ul>
-            </li>
-        </ol>
-    </div>
-
-    <div class="content">
-        <input type="checkbox" id="setting_use_timer" name="setting_use_timer" value="use_timer" checked>
-        <label for="setting_use_timer">Show Timer</label><br>
-        <input type="checkbox" id="setting_more_straights" name="setting_more_straights" value="more_straights">
-        <label for="setting_more_straights">More Straights</label><br>
-    </div>
-
-
-    <div class="card-selection">
-        <span class="label">Board:</span>
-        <div id="board"></div>
-    </div>
-    <div class="card-selection">
-        <span class="label">Hole:</span>
-        <div id="hole"></div>
-    </div>
-    <div id="score_user"></div>
-    <div id="score_true"></div>
-    <!-- Buttons and Timer HTML -->
-    <div id="button-container">
-        <button id="DrawBtn">New Cards</button>
-        <button id="ConfirmBtn">Confirm</button>
-        <span id="timer"></span>
-    </div>
-
-    <!-- Create a table to be updated by updateTable -->
-    <h2>Results</h2>
-    <div class="chart-container">
-        <canvas id="performanceChart"></canvas>
-    </div>
-    <div class="collapsible-container">
-        <button class="collapsible">Results Table - Click to show/hide</button>
-    </div>
-    <div class="content">
-        <div class="table-container">
-            <table id="hand_category_table"></table>
+    <div class="game-container">
+        <div class="collapsible-container">
+            <a href="/" class="collapsible-link" tabindex="1">Home</a>
+            <button class="collapsible-button" data-target="instructions-content">Help</button>
+            <button class="collapsible-button" data-target="settings-content">Settings</button>
         </div>
+
+        <div id="settings-content" class="collapsible-content">
+            <input type="checkbox" id="setting_use_timer" name="setting_use_timer" value="use_timer" checked>
+            <label for="setting_use_timer">Show Timer</label><br>
+            <input type="checkbox" id="setting_more_straights" name="setting_more_straights" value="more_straights">
+            <label for="setting_more_straights">More Straights (every hand has a straight but there might be something
+                even better!)</label><br>
+        </div>
+
+        <div id="instructions-content" class="collapsible-content">
+            <p>Click the best 5 cards and then click Confirm. Here are some hints for identifying Holdem poker
+                hands,
+                sorted
+                from highest to lowest rank:</p>
+            <p>In Holdem, you find the best 5 cards using the the shared community cards (the "board")
+                and two cards from your own hand (the "hole"). You do not necessarily need to use your hole cards.
+                The
+                following
+                strategy
+                may be helpful - with this approach you can stop looking as soon as you find a match.</p>
+            <ol>
+                <li>Check for straight flush possibilities:
+                    <ul>
+                        <li>Arrange the community cards mentally from highest to lowest.</li>
+                        <li>Search for three or more community cards that are in a 5-card span (example J-T-8-7) and
+                            of
+                            the
+                            same suit.
+                        </li>
+                        <li>If found, see if your hole cards can complete (or extend!) the straight flush.</li>
+                    </ul>
+                </li>
+                <li>Check for four of a kind:
+                    <ul>
+                        <li>Note that four of a kind is only possible if there is a pair or three of a kind on the
+                            board.
+                        </li>
+                    </ul>
+                </li>
+                <li>Check for a full house:
+                    <ul>
+                        <li>Identify if there's a pair (or two) and/or three of a kind in the community cards.</li>
+                        <li>Verify if you can form a full house using your two hole cards if needed.</li>
+                    </ul>
+                </li>
+                <li>Check for flush possibilities:
+                    <ul>
+                        <li>Look for at least three community cards of the same suit.</li>
+                        <li>If there are at least three of one suit, check if you can make a flush using one or two
+                            of
+                            your
+                            hole cards.</li>
+                        <li>Note that even if the board flush cards are higher than the ones in your hand, the flush
+                            hole
+                            cards will determine how your hand compares to other players.</li>
+                    </ul>
+                </li>
+                <li>Check for straights:
+                    <ul>
+                        <li>Arrange the community cards mentally from highest to lowest.</li>
+                        <li>Search for three or more community cards that are in a 5-card span (example J-T-8-7).
+                        </li>
+                        <li>If found, see if your hole cards can complete (or extend!) the straight.</li>
+                    </ul>
+                </li>
+                <li>Check for three of a kind:
+                    <ul>
+                        <li>When looking for three of a kind, note that it is not possible unless you have a pair in
+                            the
+                            hole that matches a card on the board ("a set"),
+                            or if there is a pair on the board and you have one in the hole ("trips").</li>
+                    </ul>
+                </li>
+                <li>Check for two pair hands:
+                    <ul>
+                        <li>If there's a pair in the community cards and a pair in your hole cards, you can form two
+                            pairs.
+                        </li>
+                        <li>If there are two distinct community cards that match one each of your hole cards, you
+                            can
+                            form
+                            two pairs.</li>
+                        <li>If there's a pair on the board and one card in your hole cards that matches another
+                            community
+                            card, you can form two pairs (which form a "two-pair" hand).</li>
+                    </ul>
+                </li>
+
+                <li>Check for pair:
+                    <ul>
+                        <li>Identify if there's a single card on the board that matches with a card in your hole
+                            cards,
+                            or a
+                            pair on the board.</li>
+                    </ul>
+                </li>
+                <li>Evaluate high cards and kicker strength:
+                    <ul>
+                        <li>If you don't have any strong combinations, pick the highest five cards available.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+
+
+        <h2>Texas Hold'em - Pick the best 5 cards</h2>
+
+        <div class="card-selection">
+            <span class="label">Board:</span>
+            <div id="board"></div>
+        </div>
+        <div class="card-selection">
+            <span class="label">Hole:</span>
+            <div id="hole"></div>
+        </div>
+        <div id="score_user"></div>
+        <div id="score_true"></div>
+        <!-- Buttons and Timer HTML -->
         <div id="button-container">
-            <button id="ResetStats">Reset Stats</button>
+            <button id="DrawBtn">New Cards</button>
+            <button id="ConfirmBtn">Confirm</button>
+            <span id="timer"></span>
         </div>
-    </div>
+
+        <!-- Create a table to be updated by updateTable -->
+        <h2>Results</h2>
+        <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+        </div>
+        <div class="collapsible-container">
+            <button class="collapsible-button" data-target="results-content">Results Table - Click to show/hide</button>
+        </div>
+        <div id="results-content" class="collapsible-content">
+            <div class="table-container">
+                <table id="hand_category_table"></table>
+            </div>
+            <div id="button-container">
+                <button id="ResetStats">Reset Stats</button>
+            </div>
+        </div>
+    </div> <!-- end of game-container -->
 </body>
+
 </html>
